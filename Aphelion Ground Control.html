@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aphelion Ground Control</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#E9EFF5;--win:#F7FAFD;--panel:#FFFFFF;--ink:#12263D;--muted:#566A80;--line:#D2DDE8;
+  --sky:#2C6BA8;--saf:#D9731A;--grn:#1B7A4B;--red:#C0392B;--soft:#DCE8F4;
+  --head:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#09131F;--win:#0F1F32;--panel:#14283F;--ink:#E7EEF6;--muted:#9DB0C5;--line:#27405C;
+  --sky:#6FB0E8;--saf:#F0954A;--grn:#4DB783;--red:#F27B6B;--soft:#1B3552;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#09131F;--win:#0F1F32;--panel:#14283F;--ink:#E7EEF6;--muted:#9DB0C5;--line:#27405C;
+  --sky:#6FB0E8;--saf:#F0954A;--grn:#4DB783;--red:#F27B6B;--soft:#1B3552;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 .95rem/1.5 var(--body)}
+:focus-visible{outline:3px solid var(--saf);outline-offset:2px;border-radius:4px}
+.page{max-width:1240px;margin:0 auto;padding:1.5rem 1.25rem 3rem}
+h1,h2{font-family:var(--head);margin:0;letter-spacing:-.02em;line-height:1.1}
+.intro{display:flex;justify-content:space-between;align-items:flex-end;gap:1.5rem;flex-wrap:wrap;margin:.5rem 0 1.5rem}
+.intro h1{font-size:clamp(1.9rem,4vw,3rem)}
+.intro p{color:var(--muted);max-width:46ch;margin:0}
+.win{background:var(--win);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 18px 50px rgba(10,30,60,.18)}
+.bar{display:flex;align-items:center;gap:.75rem;padding:.6rem .9rem;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+.dots{display:flex;gap:.4rem}.dots i{width:.75rem;height:.75rem;border-radius:50%;background:#FF5F57}.dots i:nth-child(2){background:#FEBC2E}.dots i:nth-child(3){background:#28C840}
+.ttl{font-weight:500;font-size:.9rem;flex:1;min-width:12rem}.ttl span{color:var(--muted);font-weight:400}
+.ctrl{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+button,select{font:500 .85rem var(--body);color:var(--ink);background:var(--win);border:1px solid var(--line);border-radius:7px;padding:.4rem .8rem;cursor:pointer}
+button:hover{border-color:var(--sky)}
+button.on{background:var(--ink);color:var(--win);border-color:var(--ink)}
+.status{display:flex;gap:.5rem;flex-wrap:wrap;padding:.6rem .9rem;border-bottom:1px solid var(--line)}
+.chip{display:inline-flex;align-items:center;gap:.45rem;font-size:.82rem;padding:.2rem .65rem;border:1px solid var(--line);border-radius:99px;background:var(--panel)}
+.chip::before{content:"";width:.5rem;height:.5rem;border-radius:50%;background:var(--grn)}
+.chip.warn::before{background:var(--saf)}.chip.bad::before{background:var(--red)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:.8rem;padding:.9rem}
+.p{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:.9rem;min-width:0}
+.p h2{font-size:1rem;margin-bottom:.6rem;display:flex;justify-content:space-between;gap:.5rem;align-items:baseline}
+.p h2 small{font:400 .78rem var(--body);color:var(--muted)}
+.c-alt{grid-column:span 8}.c-read{grid-column:span 4}.c-map{grid-column:span 5}.c-pump{grid-column:span 3}.c-sens{grid-column:span 4}.c-log{grid-column:span 7}.c-ev{grid-column:span 5}
+.big{font:600 2.8rem/1 var(--head);letter-spacing:-.03em}.big small{font:400 1rem var(--body);color:var(--muted);letter-spacing:0;margin-left:.25rem}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:.6rem .8rem;margin-top:1rem}
+.kv div span{display:block;color:var(--muted);font-size:.78rem}.kv div b{font:500 1.1rem var(--mono)}
+.phase{display:inline-block;margin-top:.9rem;padding:.2rem .7rem;border-radius:99px;font-weight:500;font-size:.85rem;background:var(--soft);color:var(--sky)}
+.phase.d{background:color-mix(in srgb,var(--saf) 20%,transparent);color:var(--saf)}
+.phase.l{background:color-mix(in srgb,var(--grn) 20%,transparent);color:var(--grn)}
+svg{width:100%;height:auto;display:block}
+svg text{font-family:var(--body);font-size:11px;fill:var(--muted)}
+.pump-state{font:600 1.6rem var(--head);margin:.2rem 0 .6rem}
+.pump-state.on{color:var(--grn)}
+.row{display:flex;justify-content:space-between;gap:.5rem;padding:.35rem 0;border-bottom:1px solid var(--line);font-size:.88rem}
+.row:last-child{border-bottom:0}.row b{font:500 .88rem var(--mono)}
+.seg{display:flex;gap:.4rem;margin:.7rem 0 .4rem}.seg button{flex:1}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.85rem;min-width:420px}
+th,td{text-align:left;padding:.4rem .5rem;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:500}
+td{font-family:var(--mono)}
+.empty{color:var(--muted);font-size:.88rem;padding:.5rem 0}
+#ev{max-height:210px;overflow:auto;font-size:.86rem}
+#ev div{padding:.3rem 0;border-bottom:1px solid var(--line);display:flex;gap:.7rem}#ev time{font-family:var(--mono);color:var(--muted);flex:none}
+.note{color:var(--muted);font-size:.85rem;margin-top:1rem}
+@media (max-width:980px){.c-alt,.c-read,.c-map,.c-pump,.c-sens,.c-log,.c-ev{grid-column:span 12}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="intro">
+    <h1>Aphelion Ground Control</h1>
+    <p>Here is the app with the payload connected: altitude, sensors, GPS, burst detection, landing estimate and pump control, all in one window. This demo runs a simulated flight.</p>
+  </div>
+
+  <div class="win" role="application" aria-label="Aphelion Ground Control demo window">
+    <div class="bar">
+      <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="ttl">Aphelion Ground Control <span>· Flight AP-01 · simulated data</span></div>
+      <div class="ctrl">
+        <button id="play" class="on">Pause</button>
+        <label class="muted" for="spd" style="font-size:.82rem;color:var(--muted)">Speed</label>
+        <select id="spd"><option value="30">30×</option><option value="60">60×</option><option value="120" selected>120×</option><option value="300">300×</option></select>
+        <button id="reset">Restart flight</button>
+      </div>
+    </div>
+    <div class="status">
+      <span class="chip">Telemetry link</span><span class="chip" id="cGps">GPS fix</span><span class="chip" id="cBat">Battery</span><span class="chip" id="cSig">Signal</span><span class="chip" id="cPump">Pump idle</span>
+    </div>
+
+    <div class="grid">
+      <section class="p c-alt">
+        <h2>Altitude <small>against time since launch</small></h2>
+        <svg viewBox="0 0 620 230" id="chart" role="img" aria-label="Altitude against time chart"></svg>
+      </section>
+
+      <section class="p c-read">
+        <h2>Flight status</h2>
+        <div class="big" id="alt">0<small>m</small></div>
+        <span class="phase" id="phase">Ascent</span>
+        <div class="kv">
+          <div><span>Climb rate</span><b id="vz">0.0 m/s</b></div>
+          <div><span>Peak altitude</span><b id="peak">0 m</b></div>
+          <div><span>Elapsed</span><b id="t">T+00:00:00</b></div>
+          <div><span>Distance from launch</span><b id="dist">0.0 km</b></div>
+          <div><span>Latitude</span><b id="lat">0</b></div>
+          <div><span>Longitude</span><b id="lon">0</b></div>
+        </div>
+      </section>
+
+      <section class="p c-map">
+        <h2>GPS track and landing estimate <small id="mapnote">If burst now</small></h2>
+        <svg viewBox="0 0 400 300" id="map" role="img" aria-label="Track of the balloon and the predicted landing zone"></svg>
+        <div class="row"><span>Predicted landing</span><b id="pl">—</b></div>
+        <div class="row"><span>Uncertainty radius</span><b id="pr">—</b></div>
+      </section>
+
+      <section class="p c-pump">
+        <h2>Suction pump</h2>
+        <div class="pump-state" id="pstate">Off</div>
+        <div class="row"><span>Mode</span><b id="pmode">Auto</b></div>
+        <div class="row"><span>Flow</span><b id="pflow">0.0 L/min</b></div>
+        <div class="row"><span>Air this sample</span><b id="pvol">0.0 L</b></div>
+        <div class="row"><span>Next window</span><b id="pnext">—</b></div>
+        <div class="seg"><button id="mAuto" class="on">Auto</button><button id="mMan">Manual</button></div>
+        <button id="pBtn" style="width:100%" disabled>Start pump</button>
+      </section>
+
+      <section class="p c-sens">
+        <h2>Sensors <small>live readings</small></h2>
+        <div class="row"><span>Air temperature</span><b id="sT">—</b></div>
+        <div class="row"><span>Pressure</span><b id="sP">—</b></div>
+        <div class="row"><span>Humidity</span><b id="sH">—</b></div>
+        <div class="row"><span>GPS satellites</span><b id="sS">—</b></div>
+        <div class="row"><span>Battery</span><b id="sB">—</b></div>
+        <div class="row"><span>Radio signal</span><b id="sR">—</b></div>
+      </section>
+
+      <section class="p c-log">
+        <h2>Sample log <small>one row per pump run</small></h2>
+        <div class="tw"><table>
+          <thead><tr><th>Sample</th><th>Altitude range</th><th>Started</th><th>Duration</th><th>Air sampled</th><th>Mean temp</th></tr></thead>
+          <tbody id="log"></tbody>
+        </table></div>
+        <div class="empty" id="logEmpty">No samples yet. Each run is saved here with its altitude, time, air volume and conditions.</div>
+      </section>
+
+      <section class="p c-ev">
+        <h2>Event log</h2>
+        <div id="ev"></div>
+      </section>
+    </div>
+  </div>
+  <p class="note">All numbers on this page are simulated. Sampling windows (8–10 km, 14–16 km, 22–24 km) are examples only, since the team sets the real ones. In the real app the same panels read the payload’s sensors, GPS and pump.</p>
+</div>
+
+<script>
+(function(){
+var NS="http://www.w3.org/2000/svg",$=function(i){return document.getElementById(i)};
+var WIN=[[8000,10000],[14000,16000],[22000,24000]],BURST=31500,TROPO=17000,LAT0=26.5,LON0=75.5,FLOW=2.0,TMAX=9000,HMAX=35000;
+var S,speed=120,playing=true,last=0;
+
+function isa(h){var T,P;if(h<11000){T=288.15-.0065*h;P=1013.25*Math.pow(T/288.15,5.2559)}else if(h<20000){T=216.65;P=226.3*Math.exp(-(h-11000)/6340)}else{T=216.65+.001*(h-20000);P=54.7*Math.pow(T/216.65,-34.16)}return{T:T-273.15,P:P}}
+function wind(h,t){var u=4+26*Math.exp(-Math.pow((h-12000)/6000,2))+3*Math.exp(-Math.pow((h-28000)/5000,2));return{u:u*(1+.08*Math.sin(t/400)),v:2+3*Math.sin(h/9000)}}
+function fall(h){var p=isa(Math.max(h,0)).P;return Math.min(60,6*Math.sqrt(1013/p))}
+function predict(h,x,y,t){var s=0;while(h>0&&s<200){var w=wind(h,t);x+=w.u*30;y+=w.v*30;h-=fall(h)*30;t+=30;s++}return{x:x,y:y}}
+function fmt(t){t=Math.floor(t);var h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=t%60;return"T+"+[h,m,s].map(function(n){return(n<10?"0":"")+n}).join(":")}
+function dur(t){t=Math.round(t);return Math.floor(t/60)+"m "+("0"+t%60).slice(-2)+"s"}
+function ll(x,y){var la=LAT0+y/111200,lo=LON0+x/(111200*Math.cos(la*Math.PI/180));return[la,lo]}
+
+function fresh(){S={t:0,h:0,x:0,y:0,vz:0,phase:"ascent",peak:0,burst:false,strat:false,mode:"auto",manual:false,pump:false,rec:null,n:0,pts:[],trk:[[0,0]],lastPts:0,pred:{x:0,y:0},prevPred:null,bat:100,evs:[]};
+  $("log").innerHTML="";$("logEmpty").style.display="";$("ev").innerHTML="";ev("Telemetry link established. Sensors and GPS responding.");ev("Launch. Ascent started.");}
+function ev(m){var d=document.createElement("div");d.innerHTML="<time>"+fmt(S?S.t:0)+"</time><span>"+m+"</span>";$("ev").insertBefore(d,$("ev").firstChild)}
+
+function pumpOn(){if(S.pump)return;S.pump=true;S.n++;S.rec={id:"S"+S.n,h0:S.h,t0:S.t,vol:0,secs:0,tsum:0,h1:S.h};ev("Pump on at "+Math.round(S.h)+" m (sample S"+S.n+")")}
+function pumpOff(why){if(!S.pump)return;S.pump=false;var r=S.rec;r.h1=S.h;var tr=document.createElement("tr");
+  tr.innerHTML="<td>"+r.id+"</td><td>"+Math.round(Math.min(r.h0,r.h1)/100)/10+"–"+Math.round(Math.max(r.h0,r.h1)/100)/10+" km</td><td>"+fmt(r.t0)+"</td><td>"+dur(r.secs)+"</td><td>"+r.vol.toFixed(1)+" L</td><td>"+(r.secs?(r.tsum/r.secs).toFixed(1):"—")+" °C</td>";
+  $("log").appendChild(tr);$("logEmpty").style.display="none";S.rec=null;ev("Pump off ("+why+"). "+r.id+" saved: "+r.vol.toFixed(1)+" L of air.")}
+
+function step(dt){
+  while(dt>0&&S.phase!=="landed"){
+    var d=Math.min(dt,5);dt-=d;S.t+=d;var w=wind(S.h,S.t),prevH=S.h;
+    if(S.phase==="ascent"){S.vz=5+.4*Math.sin(S.t/150);S.h+=S.vz*d;if(S.h>=BURST){S.phase="descent";S.vz=0}}
+    else{var tg=-fall(S.h);S.vz+=(tg-S.vz)*Math.min(1,d/12);S.h+=S.vz*d}
+    S.x+=w.u*d;S.y+=w.v*d;if(S.h>S.peak)S.peak=S.h;S.bat=Math.max(40,100-S.t/150);
+    if(S.phase==="descent"&&S.vz<-5&&!S.burst){S.burst=true;ev("<b>Burst detected</b> at "+Math.round(S.peak)+" m. Descent started. Landing estimate is now live.");pumpOff("burst")}
+    if(!S.strat&&S.h>=TROPO){S.strat=true;ev("Entered the stratosphere.")}
+    var inWin=S.phase==="ascent"&&WIN.some(function(a){return S.h>=a[0]&&S.h<=a[1]});
+    if(S.mode==="auto"){if(inWin)pumpOn();else pumpOff("window ended")}
+    if(S.pump){var a=isa(S.h);S.rec.vol+=FLOW*d/60;S.rec.secs+=d;S.rec.tsum+=a.T*d;S.rec.h1=S.h}
+    if(S.h<=0){S.h=0;S.vz=0;S.phase="landed";pumpOff("landed");var e=Math.hypot(S.x-S.pred.x,S.y-S.pred.y)/1000;ev("<b>Landed.</b> Last predicted landing was "+e.toFixed(1)+" km away.");break}
+  }
+  if(S.t-S.lastPts>20||S.phase==="landed"){S.lastPts=S.t;S.pts.push([S.t,S.h]);S.trk.push([S.x,S.y])}
+  S.pred=predict(S.h,S.x,S.y,S.t);
+}
+
+function el(n,a,p){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);(p||null)&&p.appendChild(e);return e}
+var CH={x0:44,y0:10,w:566,h:196},chart=$("chart"),cl,mp,mapEls={};
+function cx(t){return CH.x0+CH.w*Math.min(t,TMAX)/TMAX}function cy(h){return CH.y0+CH.h*(1-Math.min(h,HMAX)/HMAX)}
+function buildChart(){chart.innerHTML="";
+  WIN.forEach(function(a){el("rect",{x:CH.x0,y:cy(a[1]),width:CH.w,height:cy(a[0])-cy(a[1]),fill:"var(--grn)",opacity:.16},chart)});
+  [0,10000,20000,30000].forEach(function(h){el("line",{x1:CH.x0,x2:CH.x0+CH.w,y1:cy(h),y2:cy(h),stroke:"var(--line)"},chart);var t=el("text",{x:CH.x0-6,y:cy(h)+4,"text-anchor":"end"},chart);t.textContent=h/1000+" km"});
+  [0,30,60,90,120,150].forEach(function(m){var t=el("text",{x:cx(m*60),y:224,"text-anchor":"middle"},chart);t.textContent=m+" min"});
+  el("line",{x1:CH.x0,x2:CH.x0+CH.w,y1:cy(TROPO),y2:cy(TROPO),stroke:"var(--sky)","stroke-dasharray":"5 5"},chart);
+  var tt=el("text",{x:CH.x0+CH.w-4,y:cy(TROPO)-5,"text-anchor":"end"},chart);tt.textContent="tropopause: stratosphere above";
+  el("text",{x:CH.x0+6,y:cy(9000)+4},chart).textContent="sampling windows";
+  cl=el("path",{fill:"none",stroke:"var(--sky)","stroke-width":2.5,"stroke-linejoin":"round"},chart);
+  mapEls.cdot=el("circle",{r:5,fill:"var(--saf)"},chart);}
+var MP={s:2,ox:10,oy:75};function mx(x){return(x/1000+MP.ox)*MP.s}function my(y){return(MP.oy-y/1000)*MP.s}
+function buildMap(){mp=$("map");mp.innerHTML="";el("rect",{x:0,y:0,width:400,height:300,fill:"var(--soft)",opacity:.4,rx:6},mp);
+  for(var k=0;k<=150;k+=50){el("line",{x1:mx(k*1000),x2:mx(k*1000),y1:0,y2:300,stroke:"var(--line)"},mp);el("text",{x:mx(k*1000)+3,y:294},mp).textContent=k+" km"}
+  for(var j=-50;j<=50;j+=50)el("line",{x1:0,x2:400,y1:my(j*1000),y2:my(j*1000),stroke:"var(--line)"},mp);
+  mapEls.el=el("ellipse",{fill:"var(--saf)","fill-opacity":.22,stroke:"var(--saf)","stroke-dasharray":"4 3"},mp);
+  mapEls.trk=el("path",{fill:"none",stroke:"var(--sky)","stroke-width":2.5},mp);
+  el("circle",{cx:mx(0),cy:my(0),r:4,fill:"var(--ink)"},mp);el("text",{x:mx(0)+7,y:my(0)+14},mp).textContent="Launch site";
+  mapEls.pc=el("circle",{r:3,fill:"var(--saf)"},mp);mapEls.pt=el("text",{},mp);mapEls.pt.textContent="Landing zone";
+  mapEls.dot=el("circle",{r:6,fill:"var(--sky)",stroke:"var(--win)","stroke-width":2},mp);}
+
+function render(){
+  var a=isa(S.h),w=S.phase;
+  $("alt").innerHTML=Math.round(S.h).toLocaleString("en-US")+"<small>m</small>";
+  $("vz").textContent=(S.vz>=0?"+":"")+S.vz.toFixed(1)+" m/s";$("peak").textContent=Math.round(S.peak).toLocaleString("en-US")+" m";
+  $("t").textContent=fmt(S.t);$("dist").textContent=(Math.hypot(S.x,S.y)/1000).toFixed(1)+" km";
+  var g=ll(S.x,S.y);$("lat").textContent=g[0].toFixed(4)+"° N";$("lon").textContent=g[1].toFixed(4)+"° E";
+  var ph=$("phase");ph.textContent=w==="ascent"?"Ascent":w==="descent"?"Descent after burst":"Landed";ph.className="phase"+(w==="descent"?" d":w==="landed"?" l":"");
+  var pts=S.pts.map(function(p,i){return(i?"L":"M")+cx(p[0]).toFixed(1)+" "+cy(p[1]).toFixed(1)}).join("");
+  cl.setAttribute("d",pts);mapEls.cdot.setAttribute("cx",cx(S.t));mapEls.cdot.setAttribute("cy",cy(S.h));
+  mapEls.trk.setAttribute("d",S.trk.map(function(p,i){return(i?"L":"M")+mx(p[0]).toFixed(1)+" "+my(p[1]).toFixed(1)}).join(""));
+  mapEls.dot.setAttribute("cx",mx(S.x));mapEls.dot.setAttribute("cy",my(S.y));
+  var d=Math.hypot(S.pred.x-S.x,S.pred.y-S.y)/1000,r=w==="landed"?0.3:.5+.12*d;
+  mapEls.el.setAttribute("cx",mx(S.pred.x));mapEls.el.setAttribute("cy",my(S.pred.y));mapEls.el.setAttribute("rx",r*MP.s);mapEls.el.setAttribute("ry",r*MP.s);
+  mapEls.pc.setAttribute("cx",mx(S.pred.x));mapEls.pc.setAttribute("cy",my(S.pred.y));mapEls.pt.setAttribute("x",mx(S.pred.x)-30);mapEls.pt.setAttribute("y",my(S.pred.y)-r*MP.s-5);
+  var pg=ll(S.pred.x,S.pred.y);$("pl").textContent=pg[0].toFixed(3)+"° N, "+pg[1].toFixed(3)+"° E";$("pr").textContent="± "+r.toFixed(1)+" km";
+  $("mapnote").textContent=S.burst?(w==="landed"?"Final result":"Updating every fix"):"If burst now";
+  $("sT").textContent=(a.T+Math.sin(S.t)*.2).toFixed(1)+" °C";$("sP").textContent=a.P.toFixed(a.P<10?2:1)+" hPa";
+  $("sH").textContent=Math.max(2,Math.round(70*Math.exp(-S.h/6000)))+" %RH";$("sS").textContent=(S.h>0?11:12)-(S.h>25000?2:0)+" in view";
+  $("sB").textContent=Math.round(S.bat)+" %";$("sR").textContent=Math.round(-62-Math.hypot(S.x,S.y)/2500)+" dBm";
+  $("cBat").textContent="Battery "+Math.round(S.bat)+"%";$("cGps").textContent=w==="landed"?"GPS fix · last position held":"GPS fix · "+$("sS").textContent;
+  $("cSig").textContent="Signal "+$("sR").textContent;
+  var cp=$("cPump");cp.textContent=S.pump?"Pump running":"Pump idle";cp.className="chip"+(S.pump?"":" warn");
+  var ps=$("pstate");ps.textContent=S.pump?"Running":"Off";ps.className="pump-state"+(S.pump?" on":"");
+  $("pmode").textContent=S.mode==="auto"?"Auto":"Manual";$("pflow").textContent=(S.pump?FLOW:0).toFixed(1)+" L/min";$("pvol").textContent=(S.rec?S.rec.vol:0).toFixed(1)+" L";
+  var nx=WIN.filter(function(a){return S.h<a[0]})[0];$("pnext").textContent=S.phase!=="ascent"?"Done":S.mode==="manual"?"Manual":nx?"at "+nx[0]/1000+" km":"Done";
+  var b=$("pBtn");b.disabled=S.mode==="auto"||S.phase==="landed";b.textContent=S.pump?"Stop pump":"Start pump";
+}
+
+function loop(ts){if(!last)last=ts;var dt=Math.min((ts-last)/1000,.1);last=ts;if(playing&&S.phase!=="landed")step(dt*speed);render();requestAnimationFrame(loop)}
+$("play").onclick=function(){playing=!playing;this.textContent=playing?"Pause":"Resume";this.className=playing?"on":""};
+$("spd").onchange=function(){speed=+this.value};
+$("reset").onclick=function(){fresh();playing=true;$("play").textContent="Pause";$("play").className="on"};
+function setMode(m){S.mode=m;$("mAuto").className=m==="auto"?"on":"";$("mMan").className=m==="manual"?"on":"";if(m==="manual"){S.manual=S.pump;ev("Pump mode: manual.")}else ev("Pump mode: auto.")}
+$("mAuto").onclick=function(){setMode("auto")};$("mMan").onclick=function(){setMode("manual")};
+$("pBtn").onclick=function(){if(S.pump)pumpOff("stopped by operator");else pumpOn()};
+fresh();buildChart();buildMap();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
